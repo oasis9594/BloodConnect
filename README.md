@@ -16,6 +16,6 @@
                                                      
                                                      UPDATE:
                                                      
-                          THE ANDROID APP "BloodBank" IS COMPLETE AND RUNS ON EMULATOR VIA COMPUTER'S LOCAL IPV4 ADDRESS....
+                          THE ANDROID APP "BloodBank" IS COMPLETE AND RUNS ON MOBILE
                           
                           
