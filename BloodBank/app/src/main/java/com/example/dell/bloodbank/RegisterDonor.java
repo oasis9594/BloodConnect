@@ -23,7 +23,7 @@ public class RegisterDonor extends Fragment {
     //Enter url here
     private static final String KEY_NAME="userdetails.UserName",
             KEY_EMAIL="userdetails.UserEmail", NULL_VALUE="userdetails.nullValue";
-    private static final String REGISTER_URL = "http://[ipV4-address]:[port-number]/BloodConnect/blood_bank/appdata_reciever.php";
+    private static final String REGISTER_URL = MyUtils.BASE_URL + "appdata_reciever.php";;
     EditText eName, eAge, eEmail, eCountry, eCity, eContact ;
     Spinner eType, eGender, eExp;
     Button register;
@@ -152,7 +152,7 @@ public class RegisterDonor extends Fragment {
             }
         }
         RegisterAsyncTask ru=new RegisterAsyncTask();
-//        ru.execute();
+        ru.execute();
     }
 
     @Override

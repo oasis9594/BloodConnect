@@ -1,5 +1,8 @@
 package com.example.dell.bloodbank;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +38,7 @@ public class DonorListFragment extends Fragment {
     String type;
     RecyclerView recyclerView;
     DonorCustomAdapter donorCustomAdapter;
-    ArrayList<MyDonors> donorList=new ArrayList<>();
+    ArrayList<MyDonors> donorList = new ArrayList<>();
 
     public DonorListFragment() {
     }
@@ -46,15 +50,18 @@ public class DonorListFragment extends Fragment {
     public static DonorListFragment newInstance(int sectionNumber) {
         DonorListFragment fragment = new DonorListFragment();
         Bundle args = new Bundle();
-        switch (sectionNumber)
-        {
-            case 1:args.putString(ARG_SECTION_NUMBER, "A");
+        switch (sectionNumber) {
+            case 1:
+                args.putString(ARG_SECTION_NUMBER, "A");
                 break;
-            case 2:args.putString(ARG_SECTION_NUMBER, "B");
+            case 2:
+                args.putString(ARG_SECTION_NUMBER, "B");
                 break;
-            case 3:args.putString(ARG_SECTION_NUMBER, "AB");
+            case 3:
+                args.putString(ARG_SECTION_NUMBER, "AB");
                 break;
-            case 4:args.putString(ARG_SECTION_NUMBER, "O");
+            case 4:
+                args.putString(ARG_SECTION_NUMBER, "O");
                 break;
         }
         fragment.setArguments(args);
@@ -65,34 +72,41 @@ public class DonorListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_my_tab, container, false);
-        type=getArguments().getString(ARG_SECTION_NUMBER);
-        Log.v(getTAG(), "onCreateView "+type);
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Blood Donors");
+        type = getArguments().getString(ARG_SECTION_NUMBER);
+        Log.v(getTAG(), "onCreateView " + type);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Blood Donors");
 
-        LinearLayoutManager layoutManager=new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
-        recyclerView=(RecyclerView)rootView.findViewById(R.id.DonorList);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.DonorList);
         recyclerView.setLayoutManager(layoutManager);
 
         getData();
 
-        donorCustomAdapter=new DonorCustomAdapter(donorList, getActivity());
+        donorCustomAdapter = new DonorCustomAdapter(donorList, getActivity());
 
         recyclerView.setAdapter(donorCustomAdapter);
         return rootView;
     }
 
     public void getData() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            FetchDonorsTask donorsTask = new FetchDonorsTask();
+            donorsTask.execute();
+        } else {
+            Toast.makeText(getActivity().getApplicationContext(), "No Internet Connection!!!!", Toast.LENGTH_SHORT).show();
+        }
         FetchDonorsTask donorsTask = new FetchDonorsTask();
-        //donorsTask.execute();
+        donorsTask.execute();
     }
 
-    private String getTAG()
-    {
+    private String getTAG() {
         return MyUtils.TAG;
     }
 
-    ArrayList<MyDonors> getDonorDataFromJson(String donorJsonStr) throws JSONException
-    {
+    ArrayList<MyDonors> getDonorDataFromJson(String donorJsonStr) throws JSONException {
         ArrayList<MyDonors> donors = new ArrayList<>();
         final String DONOR_ID = "id";
         final String DONOR_NAME = "name";
@@ -104,11 +118,10 @@ public class DonorListFragment extends Fragment {
         final String DONOR_COUNTRY = "country";
         final String DONOR_TYPE = "type";
         final String DONOR_SIGN = "sign";
-        JSONArray donorArray=new JSONArray(donorJsonStr);
-        for(int i=0;i<donorArray.length();i++)
-        {
-            JSONObject obj=donorArray.getJSONObject(i);
-            MyDonors donor=new MyDonors();
+        JSONArray donorArray = new JSONArray(donorJsonStr);
+        for (int i = 0; i < donorArray.length(); i++) {
+            JSONObject obj = donorArray.getJSONObject(i);
+            MyDonors donor = new MyDonors();
             donor.setId(obj.getInt(DONOR_ID));
             donor.setName(obj.getString(DONOR_NAME));
             donor.setEmail(obj.getString(DONOR_EMAIL));
@@ -132,7 +145,7 @@ public class DonorListFragment extends Fragment {
                 donorList.clear();
                 for (MyDonors o : donors) {
                     Log.v(getTAG(), o.getBloodGroup());
-                    if(o.getBloodGroup().equals(type))
+                    if (o.getBloodGroup().equals(type))
                         donorList.add(o);
                     Log.v(getTAG(), o.getName());
                 }
@@ -147,7 +160,8 @@ public class DonorListFragment extends Fragment {
             BufferedReader reader = null;
             String donorJsonString = null;
             try {
-                String u="http://[ipV4-address]:[port-number]/BloodConnect/blood_bank/appdata_sender.php";
+                String u = MyUtils.BASE_URL + "appdata_sender.php";
+
                 URL url = new URL(u);
 
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -176,7 +190,7 @@ public class DonorListFragment extends Fragment {
                     Log.v(MyUtils.TAG, "Stream empty while fetching data");
                     return null;
                 }
-                donorJsonString= buffer.toString();
+                donorJsonString = buffer.toString();
                 Log.v(getTAG(), donorJsonString);
 
             } catch (Exception e) {
